@@ -1,4 +1,4 @@
-# ÄÄÆÄÀÏ °á°ú¹° Á¦¿Ü
+# ì»´íŒŒì¼ ê²°ê³¼ë¬¼ ì œì™¸
 *.com
 *.class
 *.dll
@@ -6,10 +6,10 @@
 *.o
 *.so
  
-# ·Î±×ÆÄÀÏ Á¦¿Ü
+# ë¡œê·¸íŒŒì¼ ì œì™¸
 *.log
  
-# ¿î¿µÃ¼Á¦¿¡¼­ ¸¸µå´Â ½Ã½ºÅÛ ÆÄÀÏµé Á¦¿Ü
+# ìš´ì˜ì²´ì œì—ì„œ ë§Œë“œëŠ” ì‹œìŠ¤í…œ íŒŒì¼ë“¤ ì œì™¸
 .DS_Store
 .DS_Store?
 ._*
@@ -18,7 +18,7 @@
 ehthumbs.db
 Thumbs.db
  
-# ÀÌÅ¬¸³½º¿¡¼­ »ý¼ºÇÏ´Â ÇÁ·ÎÁ§Æ® Á¤º¸ ÆÄÀÏ Á¦¿Ü
+# ì´í´ë¦½ìŠ¤ì—ì„œ ìƒì„±í•˜ëŠ” í”„ë¡œì íŠ¸ ì •ë³´ íŒŒì¼ ì œì™¸
 .metadata
 bin/
 tmp/
@@ -37,3 +37,7 @@ local.properties
 .factorypath
 .buildpath
 .target
+
+# ê¸°íƒ€ íŒŒì¼ ì œì™¸
+.zip
+.egg
