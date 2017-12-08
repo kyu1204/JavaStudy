@@ -90,7 +90,14 @@ public class MenuTest extends Frame {
 		
 		
 		Menu mMyMenu = new Menu("MyMenu"); //메뉴
-		MenuItem miMyMenu1 = new MenuItem("나의 메뉴1");
+		MenuItem miLifeGame = new MenuItem("LifeGame");
+		miLifeGame.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new LifeGame();
+			}
+		});
+		
 		MenuItem miMyMenu2 = new MenuItem("나의 메뉴2");
 		MenuItem miMyMenu3 = new MenuItem("나의 메뉴3");
 		
@@ -119,7 +126,7 @@ public class MenuTest extends Frame {
 		mMenu.add(mix_mas);
 		
 		//mMyMenu메뉴에 메뉴아이템 추가
-		mMyMenu.add(miMyMenu1);
+		mMyMenu.add(miLifeGame);
 		mMyMenu.add(miMyMenu2);
 		mMyMenu.add(miMyMenu3);
 		

@@ -7,7 +7,7 @@ import javax.swing.*;
 class back extends JPanel {
 	private int nCase;
 	Point pos = new Point(100, 100); // 포인터를 생성
-
+	
 	back() {
 		nCase = 0;
 	}
