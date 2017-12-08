@@ -51,7 +51,20 @@ public class MenuTest extends Frame {
 		
 		
 		MenuItem miCoffee = new MenuItem("커피 자판기");
+		miCoffee.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new Coffee("커피 자판기");
+			}
+		});
+		
 		MenuItem miVending = new MenuItem("음료 자판기");
+		miVending.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new VendingMachine("음료 자판기");
+			}
+		});
 		
 		
 		Menu mMyMenu = new Menu("MyMenu"); //메뉴
