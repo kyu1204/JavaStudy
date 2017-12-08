@@ -11,10 +11,12 @@ public class Help extends Frame {
 				dispose();
 				}
 			});
+		
+		setSize(500,460);
+		
 		Toolkit tk = Toolkit.getDefaultToolkit();
 		Dimension screenSize = tk.getScreenSize();
 		setLocation(screenSize.width/2-getWidth()/2, screenSize.height/2-getHeight()/2);
-		setSize(500,460);
 		setVisible(true); //프레임 화면에 보이기
 	}
 	public void paint(Graphics g)

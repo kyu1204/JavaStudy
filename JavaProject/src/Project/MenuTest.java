@@ -6,6 +6,7 @@ import javax.swing.*;
 
 public class MenuTest extends Frame {
 
+	private final Frame f = this;
 	MenuTest() {//기본 생성자(초기화)
 		super("Java Project"); //프레임의 제목 설정(상위 클래스)
 		setSize(500, 500);//프레임 가로, 세로
@@ -28,10 +29,15 @@ public class MenuTest extends Frame {
 		
 		Menu mFile = new Menu("File"); //메뉴
 		MenuItem miJoin = new MenuItem("Join",new MenuShortcut('J')); //회원가입 메뉴아이템
+		miJoin.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new Login(f,"로그인");
+			}
+		});
+		
 		MenuItem miExit = new MenuItem("Exit",new MenuShortcut('E')); //Exit 메뉴아이템
 		//awt에서의 단축키 설정 (Ctrl + E: File의 세부항목 Exit 생성)
-		
-		
 		miExit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -50,7 +56,7 @@ public class MenuTest extends Frame {
 		});
 		
 		
-		MenuItem miCoffee = new MenuItem("커피 자판기");
+		MenuItem miCoffee = new MenuItem("CoffeeMachine");
 		miCoffee.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -58,11 +64,27 @@ public class MenuTest extends Frame {
 			}
 		});
 		
-		MenuItem miVending = new MenuItem("음료 자판기");
+		MenuItem miVending = new MenuItem("VendingMachine");
 		miVending.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				new VendingMachine("음료 자판기");
+			}
+		});
+		
+		MenuItem miCard = new MenuItem("CardLayout");
+		miCard.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new CardLayoutEvent("카드 레이아웃");
+			}
+		});
+		
+		MenuItem mix_mas = new MenuItem("X-mas");
+		mix_mas.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new Christmas();
 			}
 		});
 		
@@ -84,7 +106,6 @@ public class MenuTest extends Frame {
 		
 		
 		
-		
 		//mFile메뉴에 메뉴아이템 추가
 		mFile.add(miJoin);
 		mFile.addSeparator();//구분선 추가
@@ -94,6 +115,8 @@ public class MenuTest extends Frame {
 		mMenu.add(miGraphicesTest);
 		mMenu.add(miCoffee);
 		mMenu.add(miVending);
+		mMenu.add(miCard);
+		mMenu.add(mix_mas);
 		
 		//mMyMenu메뉴에 메뉴아이템 추가
 		mMyMenu.add(miMyMenu1);
@@ -121,8 +144,8 @@ public class MenuTest extends Frame {
 	
 	
 	public static void main(String[] args) {
-		new MenuTest();
-		new Login(null,"로그인");
+		MenuTest mainWin = new MenuTest();
+		//new Login(mainWin,"로그인");
 	}
 
 }

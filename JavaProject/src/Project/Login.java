@@ -4,18 +4,17 @@ import java.awt.*;
 import java.awt.event.*;
 
 // 로그인
-public class Login extends Frame {
+public class Login extends Dialog {
 	private Label lid = null;
 	private Label lpwd = null;
 	private TextField tfId = null;
 	private TextField tfPwd = null;
 	private Button ok = null;
-	private final Frame f = this;
-	private static Frame parent = null;
+	private final Dialog f = this;
+	//private static Frame parent = null;
 
 	public Login(Frame parent, String title) {
-		super(title); // 프레임 상속
-		this.parent = parent;
+		super(parent,title,true);
 
 		// 윈도우 창 닫는 이벤트
 		addWindowListener(new WindowAdapter() {
@@ -46,7 +45,7 @@ public class Login extends Frame {
 		add(tfPwd); // 텍스트 필드 추가
 		add(ok); // OK버튼 추가(로그인)
 
-		setSize(450, 70); // 로그인 프레임 사이즈
+		setSize(450, 80); // 로그인 프레임 사이즈
 		setVisible(true); // 프레임 보이도록 함
 	}
 
@@ -59,7 +58,7 @@ public class Login extends Frame {
 				if (password.equals("admin")) {
 					msg md = new msg(f, id + "님, 성공적으로 로그인 되었습니다.");
 					f.setVisible(false); // 다이얼로그 화면에 보여주지 않음
-					f.dispose(); // 메모리에서 제거
+					dispose(); // 메모리에서 제거
 				} else { // 패스워드 잘못 입력했을 때, 경고 메시지 출력
 					msg md = new msg(f, "입력하신 비밀번호가 틀렸습니다. 다시 입력해 주시기 바랍니다.");
 					tfPwd.requestFocus(); // 메시지를 보낸 후, 포커스를 password 텍스트 필드로 주기 위함
