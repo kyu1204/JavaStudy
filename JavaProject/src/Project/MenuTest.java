@@ -121,7 +121,8 @@ public class MenuTest extends Frame {
 	
 	
 	public static void main(String[] args) {
-		MenuTest mainWin = new MenuTest();
+		new MenuTest();
+		new Login(null,"·Î±×ÀÎ");
 	}
 
 }
