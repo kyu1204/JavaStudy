@@ -15,7 +15,8 @@ public class GraphicesTest extends Frame implements MouseMotionListener{
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				System.exit(0); //프로그램 종료
+				dispose(); //현재 프레임만 닫고 프로그램은 종료하지 않음
+				//System.exit(0); //프로그램 종료
 			}
 		});
 		

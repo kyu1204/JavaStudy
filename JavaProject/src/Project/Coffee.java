@@ -51,7 +51,8 @@ public class Coffee extends Frame{ //frame 상속
 		{ //메뉴아이템에 이벤트 리스너등록 밑 무명클래스로 핸들러 생성
 			public void actionPerformed(ActionEvent e)  //메뉴 아이템 클릭시 해당 메소드 실행
 			{
-				System.exit(0); //프로그램 종료
+				dispose(); //현재 창만 종료
+				//System.exit(0); //프로그램 종료
 			}
 		});
 		
@@ -122,7 +123,8 @@ public class Coffee extends Frame{ //frame 상속
 		{
 			public void windowClosing(WindowEvent we) //닫기 버튼 눌렸을 시 해당 메소드 실행
 			{
-				System.exit(0); //종료
+				dispose();//현재 창만 종료
+				//System.exit(0); //종료
 			}
 		});
 				

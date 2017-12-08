@@ -267,7 +267,8 @@ public class VendingMachine extends Frame{
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				System.exit(0); //프로그램 종료
+				dispose(); //현재 창만 종료
+				//System.exit(0); //프로그램 종료
 			}
 		});
 		

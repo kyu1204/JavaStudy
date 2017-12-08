@@ -75,6 +75,12 @@ public class MenuTest extends Frame {
 		
 		Menu mHelp = new Menu("Help"); //메뉴
 		MenuItem miHelp = new MenuItem("도움말");
+		miHelp.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new Help();
+			}
+		});
 		
 		
 		
