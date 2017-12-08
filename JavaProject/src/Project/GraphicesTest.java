@@ -1,15 +1,13 @@
+package Project;
+
 import java.awt.*;
 import java.awt.event.*;
 
-public class GraphicesEx2 extends Frame implements MouseMotionListener{
+public class GraphicesTest extends Frame implements MouseMotionListener{
 
 	int x=0,y=0;
 	
-	public static void main(String[] args) {
-		new GraphicesEx2("GraphicesEx2");
-	}
-	
-	public GraphicesEx2(String title)
+	public GraphicesTest(String title)
 	{
 		super(title);
 		
@@ -17,11 +15,16 @@ public class GraphicesEx2 extends Frame implements MouseMotionListener{
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				System.exit(0);
+				System.exit(0); //프로그램 종료
 			}
 		});
 		
-		setBounds(100,100,500,500);
+		setSize(300, 300);
+		//위치 지정
+		Toolkit tk = Toolkit.getDefaultToolkit();
+		Dimension screenSize = tk.getScreenSize();
+		setLocation(screenSize.width/2-getWidth()/2, screenSize.height/2-getHeight()/2);
+		
 		setVisible(true);
 	}
 	//모든 컴포넌트에 Graphics 객체가 있음!, getGraphices()로 얻을 수 있음!
@@ -53,3 +56,4 @@ public class GraphicesEx2 extends Frame implements MouseMotionListener{
 	public void mouseDragged(MouseEvent e) {}
 
 }
+

@@ -41,9 +41,17 @@ public class MenuTest extends Frame {
 		});
 		
 		Menu mMenu = new Menu("Menu"); //메뉴
-		MenuItem miMenu1 = new MenuItem("메뉴1");
-		MenuItem miMenu2 = new MenuItem("메뉴2");
-		MenuItem miMenu3 = new MenuItem("메뉴3");
+		MenuItem miGraphicesTest = new MenuItem("GraphicesTest");
+		miGraphicesTest.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new GraphicesTest("그래픽 테스트"); //GraphicesTest(문자열)생성자 호출!
+			}
+		});
+		
+		
+		MenuItem miCoffee = new MenuItem("커피 자판기");
+		MenuItem miVending = new MenuItem("음료 자판기");
 		
 		
 		Menu mMyMenu = new Menu("MyMenu"); //메뉴
@@ -64,9 +72,9 @@ public class MenuTest extends Frame {
 		mFile.add(miExit);
 		
 		//mMenu메뉴에 메뉴아이템 추가
-		mMenu.add(miMenu1);
-		mMenu.add(miMenu2);
-		mMenu.add(miMenu3);
+		mMenu.add(miGraphicesTest);
+		mMenu.add(miCoffee);
+		mMenu.add(miVending);
 		
 		//mMyMenu메뉴에 메뉴아이템 추가
 		mMyMenu.add(miMyMenu1);
