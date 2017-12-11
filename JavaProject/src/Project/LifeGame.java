@@ -6,11 +6,18 @@ import java.util.ArrayList;
 
 import javax.swing.*;
 
+import com.sun.org.apache.xml.internal.serializer.SerializerTrace;
+
 public class LifeGame extends Frame {
 	private Cell c;
-	private Timer t;
+	public Timer t;
+	public Color cellColor = Color.BLACK;
+	public boolean check = false;
 	private static int generation = 0;
-
+	private final Frame f = this;
+	Image img_buffer =null;
+	Graphics buffer = null;
+	
 	class MouseEventHandle extends MouseAdapter {
 		@Override
 		public void mousePressed(MouseEvent e) {
@@ -70,18 +77,59 @@ public class LifeGame extends Frame {
 	LifeGame() {
 		super(Integer.toString(generation) + " 세대");
 		setSize(500, 500);
+		Toolkit tk = Toolkit.getDefaultToolkit();
+		Dimension screenSize = tk.getScreenSize();
+		setLocation(screenSize.width/2-getWidth()/2, screenSize.height/2-getHeight()/2);
+		setIconImage(new ImageIcon("cell.jpg").getImage());
 
 		c = new Cell(getWidth(), getHeight());
 
 		addMouseListener(new MouseEventHandle());
 		addComponentListener(new ResizeEventHandle());
-
+		
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				dispose();
 			}
 		});
+		MenuBar mb = new MenuBar();
+		Menu mColor = new Menu("Color");
+		MenuItem miColor = new MenuItem("Select Color",new MenuShortcut('C'));
+		miColor.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				SelectColor cd = new SelectColor(f,"Select Color",true);
+				cd.setVisible(true);
+				if(check == true)
+					repaint();
+			}
+		});
+		Menu mHelp = new Menu("Help");
+		MenuItem miHelp = new MenuItem("Help",new MenuShortcut('H'));
+		miHelp.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new LifeGameHelp(f,"Life Game Help",true).setVisible(true);
+			}
+		});
+		Menu mSpeed = new Menu("Speed");
+		MenuItem miSpeed = new MenuItem("Rate of growth",new MenuShortcut('S'));
+		miSpeed.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new Speed(f,"Rate of growth",false).setVisible(true);;
+			}
+		});
+		
+		mSpeed.add(miSpeed);
+		mColor.add(miColor);
+		mHelp.add(miHelp);
+		mb.add(mSpeed);
+		mb.add(mColor);
+		mb.add(mHelp);
+		setMenuBar(mb);
+		
 
 		t = new Timer(100, new ActionListener() {
 			@Override
@@ -93,6 +141,7 @@ public class LifeGame extends Frame {
 		setVisible(true);
 	}
 
+	////// 핵심 코드 (세포 룰)
 	private void NextGeneration() {
 		c.AliveCell();
 		++generation;
@@ -100,12 +149,24 @@ public class LifeGame extends Frame {
 		repaint();
 	}
 
+	////// 그리기 작업
 	@Override
 	public void paint(Graphics g) {
-		DrawRec(g);
+		//더블버퍼링
+		if(getWidth() == 0 || getHeight() == 0)
+			return;
+		img_buffer = createImage(getWidth(), getHeight());
+		buffer = img_buffer.getGraphics();
+		DrawRec(buffer);
+		g.drawImage(img_buffer, 0, 0, this);
+	}
+	@Override
+	public void update(Graphics g) {
+		paint(g);
 	}
 
 	public void DrawRec(Graphics g) {
+		g.setColor(cellColor);
 		g.clearRect(0, 0, getWidth(), getHeight());
 		for (int i = 0; i < getHeight(); ++i) {
 			for (int j = 0; j < getWidth(); ++j) {
