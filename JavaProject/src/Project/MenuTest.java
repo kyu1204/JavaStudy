@@ -98,7 +98,13 @@ public class MenuTest extends Frame {
 			}
 		});
 		
-		MenuItem miMyMenu2 = new MenuItem("나의 메뉴2");
+		MenuItem miOmock = new MenuItem("오목");
+		miOmock.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				new Omock();
+			}
+		});
 		MenuItem miMyMenu3 = new MenuItem("나의 메뉴3");
 		
 		
@@ -127,7 +133,7 @@ public class MenuTest extends Frame {
 		
 		//mMyMenu메뉴에 메뉴아이템 추가
 		mMyMenu.add(miLifeGame);
-		mMyMenu.add(miMyMenu2);
+		mMyMenu.add(miOmock);
 		mMyMenu.add(miMyMenu3);
 		
 		mHelp.add(miHelp);
