@@ -27,6 +27,7 @@ public class MessagePacker {
 	}
 	
 	public byte[] Finish(){
+		
 		offset = buffer.position(); // 마지막 포인터 위치 기억
 		byte[] data = {};
 		
@@ -38,7 +39,7 @@ public class MessagePacker {
 		System.arraycopy(data, 0, result, 0, offset); // offset만큼 복사한다
 		
 		buffer.flip();
-		return new byte[offset];
+		return result;
 	}
 	
 	public void SetProtocol(byte protocol){
