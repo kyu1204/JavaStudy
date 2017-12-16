@@ -11,7 +11,7 @@ public class ChatClient {
     public void startClient() throws IOException, InterruptedException {
  
     	
-        InetSocketAddress hostAddress = new InetSocketAddress("localhost", 50000);
+        InetSocketAddress hostAddress = new InetSocketAddress("127.0.0.1", 50000);
         SocketChannel client = SocketChannel.open(hostAddress);
  
         System.out.println("Client Started!");
