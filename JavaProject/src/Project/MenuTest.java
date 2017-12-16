@@ -102,7 +102,7 @@ public class MenuTest extends Frame {
 		miOmock.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				new Omock();
+				new OmockLogin();
 			}
 		});
 		MenuItem miMyMenu3 = new MenuItem("나의 메뉴3");

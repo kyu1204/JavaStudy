@@ -20,26 +20,26 @@ public class Omock extends Frame {
 		public void mousePressed(MouseEvent e) {
 			int x = (e.getX() - 25) / 30;
 			int y = (e.getY() - 55) / 30;
-			if (flag == Stone.BLACK && table.get(y).get(x) == Stone.NONE) {
-				table.get(y).set(x, Stone.BLACK);
+			if (x < (getWidth() - 10) / 30 && y < (getHeight() - 30) / 30) {
+				if (flag == Stone.BLACK && table.get(y).get(x) == Stone.NONE) {
+					table.get(y).set(x, Stone.BLACK);
 
-				repaint();
-				if (Rull(x, y))
-				{
-					new OmockVictory(my, flag);
-				}
-				else
-					flag = Stone.WHITE;
-			} 
-			else if (flag == Stone.WHITE && table.get(y).get(x) == Stone.NONE) {
-				table.get(y).set(x, Stone.WHITE);
+					repaint();
+					if (Rull(x, y)) {
+						new OmockVictory(my, flag);
+					} 
+					else
+						flag = Stone.WHITE;
+				} 
+				else if (flag == Stone.WHITE && table.get(y).get(x) == Stone.NONE) {
+					table.get(y).set(x, Stone.WHITE);
 
-				repaint();
-				if(Rull(x, y))
-				{
-					new OmockVictory(my, flag);
+					repaint();
+					if (Rull(x, y)) {
+						new OmockVictory(my, flag);
+					}
+					flag = Stone.BLACK;
 				}
-				flag = Stone.BLACK;
 			}
 		}
 	}
@@ -47,6 +47,7 @@ public class Omock extends Frame {
 	Omock() {
 		super("¿À¸ñ");
 		setSize(710, 740);
+		setIconImage(new ImageIcon("5mock.jpg").getImage());
 		Toolkit tk = Toolkit.getDefaultToolkit();
 		Dimension screenSize = tk.getScreenSize();
 		setLocation(screenSize.width/2-getWidth()/2, screenSize.height/2-getHeight()/2);
