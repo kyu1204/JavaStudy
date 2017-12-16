@@ -175,8 +175,6 @@ public class Server implements Runnable {
 			e.printStackTrace();
 		}
 
-		log.append(buffer.array().length+"\n");
-
 		msg = new MessagePacker(buffer.array()); // Byte Data를 다 받아왔다.
 		byte protocol = msg.getProtocol();
 
