@@ -1,20 +1,14 @@
-import java.io.IOException;
-import java.net.Inet4Address;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
+import java.nio.channels.AsynchronousChannelGroup;
+import java.nio.channels.AsynchronousServerSocketChannel;
+import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.CompletionHandler;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
+import java.util.concurrent.Executors;
 import java.awt.*;
-import java.awt.Event;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -24,31 +18,36 @@ import java.awt.event.WindowEvent;
 import MsgPacker.MessagePacker;
 import MsgPacker.MessageProtocol;
 
-public class Server implements Runnable {
+public class Server {
 
-	private Selector selector;
-	private ServerSocketChannel socketChannel;
-	private HashMap<SocketChannel,String>dataMapper;
+	/////////Network////////////////////////
+	private AsynchronousChannelGroup channelGroup;
+	private AsynchronousServerSocketChannel serverSocketChannel;
+	List<Client> connections = new Vector<Client>();
 	private InetSocketAddress socketAddress;
-	private Thread workthread;
-	private MessagePacker msg; // 여기서 MessagePacker를 써보자
-	private final Server my = this;
-	private boolean flag = false;
 	
-	List<String> room = new ArrayList();
+	/////UI////////////
+	private HashMap<Integer, String> room;
+	private boolean flag = false;
+	private final Server my = this;
 	Button start = new Button("     시작     ");
+	Button stop = new Button("     정지     ");
 	Panel bPanel = new Panel();
 	TextArea log = new TextArea();
+	static int roomcount = 0;
 
 	public Server(String ip,String port) {
 		Frame f = new Frame("OmokServer");
-		room.add("No.1 다 덤벼 (0/1)");
+		room = new HashMap<Integer,String>();
+		roomcount++;
+		room.put(roomcount^1204, "No."+roomcount+" 다 덤벼 (0/1)");
 		socketAddress = new InetSocketAddress(ip,Integer.parseInt(port)); // 소켓 주소 설정
-		dataMapper = new HashMap<SocketChannel, String>();
 		
 		bPanel.setLayout(new FlowLayout());
 		bPanel.add(start);
+		bPanel.add(stop);
 		start.addActionListener(new ActionHandle());
+		stop.addActionListener(new ActionHandle());
 		
 		f.addWindowListener(new WindowAdapter() {
 			@Override
@@ -59,6 +58,9 @@ public class Server implements Runnable {
 		f.add(bPanel,"North");
 		f.add(log,"Center");
 		f.setSize(500,800);
+		Toolkit tk = Toolkit.getDefaultToolkit();
+		Dimension screenSize = tk.getScreenSize();
+		f.setLocation(screenSize.width/2-f.getWidth()/2, screenSize.height/2-f.getHeight()/2);
 		f.setVisible(true);
 	}
 	class ActionHandle implements ActionListener{
@@ -71,7 +73,7 @@ public class Server implements Runnable {
 				if (flag == false) {
 					log.append("IP:" + socketAddress.getAddress().getHostAddress() + "\nPort:" + socketAddress.getPort()
 							+ "\n서버 시작\n");
-					my.run();
+					my.startServer();
 					flag = true;
 				}
 				else {
@@ -79,10 +81,181 @@ public class Server implements Runnable {
 				}
 				
 			}
+			else if(o.equals(stop)) {
+				if(flag == true) {
+					my.stopServer();
+					flag = false;
+				}
+			}
 		}
-		
+
 	}
 
+	void startServer() {
+		try {
+			channelGroup = AsynchronousChannelGroup.withFixedThreadPool(Runtime.getRuntime().availableProcessors(), Executors.defaultThreadFactory());
+			
+			serverSocketChannel = AsynchronousServerSocketChannel.open(channelGroup);
+			serverSocketChannel.bind(socketAddress);
+		}catch (Exception e) {
+			if(serverSocketChannel.isOpen()) {
+				stopServer();
+			}
+			return;
+		}
+		
+		serverSocketChannel.accept(null, new CompletionHandler<AsynchronousSocketChannel, Void>() {
+			@Override
+			public void completed(AsynchronousSocketChannel socketChannel, Void attachment) {
+				try {
+					log.append( "[연결 수락: " + socketChannel.getRemoteAddress()  + ": " + Thread.currentThread().getName() + "]\n");
+				}
+				catch (Exception e) {}
+				Client client = new Client(socketChannel);
+				connections.add(client);
+				serverSocketChannel.accept(null,this);
+			}
+			@Override
+			public void failed(Throwable exc, Void attachment) {
+				if(serverSocketChannel.isOpen()) {
+					stopServer();
+				}
+			}
+		});
+	}
+	
+	void stopServer() {
+		try {
+			connections.clear();
+			if(channelGroup != null && !channelGroup.isShutdown()) {
+				channelGroup.shutdownNow();
+			}
+			log.append("서버 중지\n");
+		}catch (Exception e) {}
+	}
+	
+	class Client{
+		AsynchronousSocketChannel socketChannel;
+		
+		public Client(AsynchronousSocketChannel socketChannel) {
+			this.socketChannel = socketChannel;
+			receive();
+		}
+		
+		public void receive() {
+			ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+			socketChannel.read(byteBuffer,byteBuffer,new CompletionHandler<Integer, ByteBuffer>() {
+				@Override
+				public void completed(Integer result, ByteBuffer attachment) {
+					try {
+						MessagePacker msg = new MessagePacker(byteBuffer.array());
+						byte protocol = msg.getProtocol();
+						
+						switch (protocol) {
+						case MessageProtocol.LOGIN: {
+							MessagePacker reply = new MessagePacker();
+							reply.SetProtocol(MessageProtocol.LOGIN);
+							reply.add(room.size());
+							for(int roomkey:room.keySet())
+							{
+								reply.add(room.get(roomkey));
+							}
+							reply.Finish();
+							send(reply);
+							break;
+						}
+
+						case MessageProtocol.CREATE: {
+							String roomname = msg.getString();
+							++roomcount;
+							roomname = "No."+roomcount+" "+roomname+" (0/1)";
+							int roomkey = roomcount ^ 1204;
+							room.put(roomkey, roomname);
+							
+							MessagePacker reply = new MessagePacker();
+							reply.SetProtocol(MessageProtocol.CREATE);
+							reply.add(roomkey);
+							reply.Finish();
+							send(reply);
+							
+							MessagePacker broadcast = new MessagePacker();
+							broadcast.SetProtocol(MessageProtocol.LOGIN);
+							broadcast.add(room.size());
+							for(int item:room.keySet())
+							{
+								broadcast.add(room.get(item));
+							}
+							broadcast.Finish();
+							for(Client client: connections) {
+								client.send(broadcast);
+							}
+							
+							break;
+						}
+
+						case MessageProtocol.JOIN: {
+
+							break;
+						}
+
+						case MessageProtocol.BATTLE_START: {
+
+							break;
+						}
+
+						case MessageProtocol.BATTLE_END: {
+
+							break;
+						}
+
+						case MessageProtocol.BATTLE: {
+
+							break;
+						}
+						}
+						ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+						socketChannel.read(byteBuffer,byteBuffer,this);
+					}catch (Exception e) {}
+				}
+				@Override
+				public void failed(Throwable exc, ByteBuffer attachment) {
+					try {
+						log.append( "[클라이언트 통신 안됨: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]\n");
+						connections.remove(Client.this);
+						socketChannel.close();
+					}catch (Exception e) {}
+				}
+			});
+		}
+		
+		void send(MessagePacker data) {
+			socketChannel.write(data.getBuffer(),null,new CompletionHandler<Integer, Void>() {
+				@Override
+				public void completed(Integer result, Void attachment) {
+				}
+				@Override
+				public void failed(Throwable exc, Void attachment) {
+					try {
+						log.append( "[클라이언트 통신 안됨: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]\n");
+						connections.remove(Client.this);
+						socketChannel.close();
+					}catch (Exception e) {}
+				}
+			});
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	/*
 	@Override
 	public void run() { // 서버가 실행되면 호출된다.
 		// TODO Auto-generated method stub
@@ -104,8 +277,6 @@ public class Server implements Runnable {
 			public void run() {
 				while (true) {
 					try {
-						if(Thread.interrupted())
-							break;
 						selector.select(); // 셀럭터로 소켓을 선택한다. 여기서 Blocking 됨.
 
 						Iterator<?> keys = selector.selectedKeys().iterator();
@@ -166,7 +337,7 @@ public class Server implements Runnable {
 		SocketChannel channel = (SocketChannel) key.channel();
 		ByteBuffer buffer = ByteBuffer.allocate(1024);
 		SocketAddress remoteAddr=null;
-		Socket socket;
+		Socket socket=null;
 		int numRead = -1;
 
 		try {
@@ -207,21 +378,61 @@ public class Server implements Runnable {
 		}
 		case MessageProtocol.LOGIN:{
 			MessagePacker sendmsg = new MessagePacker();
-			msg.SetProtocol(MessageProtocol.LOGIN);
-			msg.add(room.size());
-			for(String item:room)
+			sendmsg.SetProtocol(MessageProtocol.LOGIN);
+			sendmsg.add(room.size());
+			for(int roomkey:room.keySet())
 			{
-				msg.add(item);
+				sendmsg.add(room.get(roomkey));
 			}
-			msg.Finish();
+			sendmsg.Finish();
 			try {
-				channel.write(msg.getBuffer());
+				channel.write(sendmsg.getBuffer());
 			} 
 			catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			log.append(remoteAddr+" login!\n");
+			break;
+		}
+		
+		case MessageProtocol.CREATE: {
+			String roomname = msg.getString();
+			roomname = String.format(roomname+" (0/1)");
+			int roomkey = room.size() ^ 1204;
+			room.put(roomkey, roomname);
+			
+			MessagePacker sendmsg = new MessagePacker();
+			sendmsg.SetProtocol(MessageProtocol.LOGIN);
+			sendmsg.add(room.size());
+			for(int item:room.keySet())
+			{
+				sendmsg.add(room.get(item));
+			}
+			sendmsg.Finish();
+			
+			Iterator<?> keys = selector.selectedKeys().iterator();
+
+			while (keys.hasNext()) { // 셀렉터가 가지고 있는 정보와 비교해봄
+
+				SelectionKey key1 = (SelectionKey) keys.next();
+				keys.remove();
+
+				if (!key1.isValid()) { // 사용가능한 상태가 아니면 그냥 넘어감.
+					continue;
+				}
+				if (key1.isReadable()) { // 데이터를 읽을 수 있는 상태라면
+					SocketChannel target = (SocketChannel)key1.channel();
+					try {
+						target.write(sendmsg.getBuffer());
+					} 
+					catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+
+			}
 			break;
 		}
 
@@ -249,4 +460,5 @@ public class Server implements Runnable {
 		}
 
 	}
+	*/
 }

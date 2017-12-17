@@ -3,8 +3,6 @@ import java.awt.event.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import javax.swing.*;
-
 public class LoginServer extends Frame{
 	private final Frame my = this;
 	public LoginServer() {

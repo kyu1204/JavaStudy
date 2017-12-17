@@ -1,7 +1,5 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 
 public class LoginClient extends Frame{
@@ -26,36 +24,10 @@ public class LoginClient extends Frame{
 				String ip = tip.getText();
 				String port = tport.getText();
 				try {
-					OmokClient c = new OmokClient();
-					c.startClient(ip, port);
+					OmokClient c = new OmokClient(ip,port);
 				}
 				catch(Exception e)
-				{
-					Dialog alram = new Dialog(my, "WARING!", true);
-					Button ok = new Button("확인");
-					ok.addActionListener(new ActionListener() {
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							alram.dispose();
-						}
-					});
-					Panel bPanel = new Panel();
-					bPanel.setLayout(new FlowLayout());
-					bPanel.add(ok);
-					alram.add(new Label("     서버가 꺼져 있습니다!"),"Center");
-					alram.add(bPanel,"South");
-					alram.addWindowListener(new WindowAdapter() {
-						@Override
-						public void windowClosing(WindowEvent e) {
-							alram.dispose();
-						}
-					});
-					alram.setSize(150, 150);
-					Toolkit tk = Toolkit.getDefaultToolkit();
-					Dimension screenSize = tk.getScreenSize();
-					alram.setLocation(screenSize.width/2-alram.getWidth()/2, screenSize.height/2-alram.getHeight()/2);
-					alram.setVisible(true);
-				}
+				{}
 				finally {
 					my.dispose();
 				}
