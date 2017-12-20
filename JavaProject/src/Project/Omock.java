@@ -17,10 +17,16 @@ public class Omock extends Frame {
 
 	class MouseEventHandle extends MouseAdapter {
 		@Override
+		public void mouseMoved(MouseEvent e) {
+			int x = e.getX();
+			int y = e.getY();
+			my.setTitle(x+","+y);
+		}
+		@Override
 		public void mousePressed(MouseEvent e) {
-			int x = (e.getX() - 25) / 30;
-			int y = (e.getY() - 55) / 30;
-			if (x < (getWidth() - 10) / 30 && y < (getHeight() - 30) / 30) {
+			int x = (e.getX() - 15) / 30;
+			int y = (e.getY() - 45) / 30;
+			if (x < (getWidth() - 10) / 30 && y < (getHeight() - 60) / 30) {
 				if (flag == Stone.BLACK && table.get(y).get(x) == Stone.NONE) {
 					table.get(y).set(x, Stone.BLACK);
 
@@ -46,7 +52,8 @@ public class Omock extends Frame {
 
 	Omock() {
 		super("¿À¸ñ");
-		setSize(710, 740);
+		setSize(690, 720);
+		setResizable(false);
 		setIconImage(new ImageIcon("5mock.jpg").getImage());
 		Toolkit tk = Toolkit.getDefaultToolkit();
 		Dimension screenSize = tk.getScreenSize();
@@ -67,6 +74,7 @@ public class Omock extends Frame {
 			}
 		});
 		addMouseListener(new MouseEventHandle());
+		addMouseMotionListener(new MouseEventHandle());
 
 		setVisible(true);
 	}
@@ -193,10 +201,10 @@ public class Omock extends Frame {
 			for (int j = 0; j < (getWidth() - 10) / 30; ++j) {
 				if (table.get(i).get(j) == Stone.BLACK) {
 					g.setColor(Color.black);
-					g.fillOval((j * 30) + 25, (i * 30) + 55, 30, 30);
+					g.fillOval((j * 30) + 15, (i * 30) + 45, 30, 30);
 				} else if (table.get(i).get(j) == Stone.WHITE) {
 					g.setColor(Color.white);
-					g.fillOval((j * 30) + 25, (i * 30) + 55, 30, 30);
+					g.fillOval((j * 30) + 15, (i * 30) + 45, 30, 30);
 				}
 			}
 		}
@@ -205,10 +213,10 @@ public class Omock extends Frame {
 	private void DrawLine(Graphics g) {
 		g.setColor(Color.black);
 		g.clearRect(0, 0, getWidth(), getHeight());
-		for (int cor = 10; cor < this.getWidth(); cor += 30) {
+		for (int cor = 0; cor < this.getWidth(); cor += 30) {
 			g.drawLine(cor, 0, cor, this.getHeight());
 		}
-		for (int row = 10; row < this.getHeight(); row += 30) {
+		for (int row = 0; row < this.getHeight(); row += 30) {
 			g.drawLine(0, row, this.getWidth(), row);
 		}
 		DrawStone(g);

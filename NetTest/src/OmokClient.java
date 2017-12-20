@@ -6,29 +6,61 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.Executors;
 import java.awt.*;
+import java.awt.List;
 import java.awt.event.*;
+import java.util.*;
 
-import MsgPacker.Alram;
 import MsgPacker.MessagePacker;
 import MsgPacker.MessageProtocol;
 
 public class OmokClient {
-	private static int roomkey;
+	private final OmokClient my = this;
+	private int roomkey;
+	private String roomName;
+	public boolean readyflag = false;
+	
 	Frame main;
 	List roomview = new List();
 	Panel bPanel = new Panel();
 	Button createroom = new Button("방 만들기");
 	Button joinroom = new Button("들어가기");
+	Button refresh = new Button("새로고침");
+	ArrayList<String> room = new ArrayList<String>();
 	
 	AsynchronousChannelGroup channelGroup;
 	AsynchronousSocketChannel socketChannel;
 	public OmokClient(String ip,String port) {
 		main = new Frame("Omok");
 		startClient(ip, String.valueOf(port));
-		
+		roomview.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 		bPanel.setLayout(new FlowLayout(FlowLayout.CENTER,50,30));
 		bPanel.add(createroom);
 		bPanel.add(joinroom);
+		bPanel.add(refresh);
+		
+		joinroom.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String roomName = roomview.getSelectedItem();
+				String stringkey = roomName.substring(3, 4);
+				int key = Integer.parseInt(stringkey) ^ 1204;
+				MessagePacker msg = new MessagePacker();
+				msg.SetProtocol(MessageProtocol.JOIN);
+				msg.add(key);
+				msg.Finish();
+				send(msg);
+			}
+		});
+		
+		refresh.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				MessagePacker msg = new MessagePacker();
+				msg.SetProtocol(MessageProtocol.LOGIN);
+				msg.Finish();
+				send(msg);
+			}
+		});
 		
 		createroom.addActionListener(new ActionListener() {
 			@Override
@@ -166,19 +198,52 @@ public class OmokClient {
 					switch (protocol) {
 					case MessageProtocol.LOGIN: {
 						int size = msg.getInt();
-						for(int i = 0;i<size;++i) {
-							roomview.add(msg.getString());
+						room.clear();
+						for (int i = 0; i < size; ++i) {
+							room.add(msg.getString());
 						}
+						roomview.removeAll();
+						for(int i = 0; i< room.size();++i)
+							roomview.add((String)room.get(i));
 						break;
 					}
 
 					case MessageProtocol.CREATE: {
 						roomkey = msg.getInt();
+						roomName = msg.getString();
+						//main.setVisible(false);
 						break;
 					}
 
 					case MessageProtocol.JOIN: {
-
+						int roomid = msg.getInt();
+						String roomName = msg.getString();
+						ArrayList<String> member = new ArrayList<String>();
+						int size = msg.getInt();
+						for(int i = 0; i<size;++i) {
+							member.add(msg.getString());
+						}
+						main.setVisible(false);
+						ReadyRoom r = new ReadyRoom(roomid,roomName,main,my);
+						for(int i = 0; i<member.size();++i) {
+							r.member.add(member.get(i));
+						}
+						readyflag = true;
+						/*
+						if(ready != null) {
+							ready.member.removeAll();
+							for(int i = 0; i<member.size();++i) {
+								ready.member.add(member.get(i));
+							}
+						}
+						else if(ready == null) {
+							main.setVisible(false);
+							ready = new ReadyRoom(roomid,roomName,main,my);
+							ready.member.removeAll();
+							for(int i = 0; i<member.size();++i) {
+								ready.member.add(member.get(i));
+							}
+						}*/
 						break;
 					}
 
@@ -224,4 +289,6 @@ public class OmokClient {
 			}
 		});
 	}
+    
+    
 }

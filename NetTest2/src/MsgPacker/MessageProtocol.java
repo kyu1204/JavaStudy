@@ -14,7 +14,6 @@ public class MessageProtocol{
 	public static final byte READYLEAVE = 12;
 	
 	public static final byte BATTLE_START = 20;
-	public static final byte BATTLE_END = 22;
 	public static final byte BATTLE = 21;
-	
+	public static final byte BATTLE_END = 22;
 }

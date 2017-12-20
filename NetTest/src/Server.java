@@ -4,6 +4,8 @@ import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
+import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -13,7 +15,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
+import java.io.IOException;
 
 import MsgPacker.MessagePacker;
 import MsgPacker.MessageProtocol;
@@ -27,7 +29,7 @@ public class Server {
 	private InetSocketAddress socketAddress;
 	
 	/////UI////////////
-	private HashMap<Integer, String> room;
+	public static HashMap<Integer, GameRoom> roomManager = new HashMap<Integer,GameRoom>();
 	private boolean flag = false;
 	private final Server my = this;
 	Button start = new Button("     ½ÃÀÛ     ");
@@ -38,9 +40,9 @@ public class Server {
 
 	public Server(String ip,String port) {
 		Frame f = new Frame("OmokServer");
-		room = new HashMap<Integer,String>();
 		roomcount++;
-		room.put(roomcount^1204, "No."+roomcount+" ´Ù ´ýº­ (0/1)");
+		roomManager.put(roomcount^1204,new GameRoom(roomcount^1204,"No."+roomcount+" ´Ù ´ýº­ "));
+		
 		socketAddress = new InetSocketAddress(ip,Integer.parseInt(port)); // ¼ÒÄÏ ÁÖ¼Ò ¼³Á¤
 		
 		bPanel.setLayout(new FlowLayout());
@@ -136,9 +138,17 @@ public class Server {
 	
 	class Client{
 		AsynchronousSocketChannel socketChannel;
+		GameUser user;
 		
 		public Client(AsynchronousSocketChannel socketChannel) {
 			this.socketChannel = socketChannel;
+			try {
+				user = new GameUser(socketChannel.getRemoteAddress(),socketChannel);
+			} 
+			catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			receive();
 		}
 		
@@ -148,42 +158,53 @@ public class Server {
 				@Override
 				public void completed(Integer result, ByteBuffer attachment) {
 					try {
-						MessagePacker msg = new MessagePacker(byteBuffer.array());
+						MessagePacker msg = new MessagePacker(attachment.array());
 						byte protocol = msg.getProtocol();
+						
 						
 						switch (protocol) {
 						case MessageProtocol.LOGIN: {
 							MessagePacker reply = new MessagePacker();
 							reply.SetProtocol(MessageProtocol.LOGIN);
-							reply.add(room.size());
-							for(int roomkey:room.keySet())
+							reply.add(roomManager.size());
+							for(int roomkey:roomManager.keySet())
 							{
-								reply.add(room.get(roomkey));
+								reply.add(roomManager.get(roomkey).getName());
 							}
 							reply.Finish();
 							send(reply);
+							break;
+						}
+						case MessageProtocol.CLOSE: {
+							connections.remove(socketChannel);
+							log.append("[¿¬°á Á¾·á: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]\n");
+							socketChannel.close();
 							break;
 						}
 
 						case MessageProtocol.CREATE: {
 							String roomname = msg.getString();
 							++roomcount;
-							roomname = "No."+roomcount+" "+roomname+" (0/1)";
+							roomname = "No."+roomcount+" "+roomname+" ";
 							int roomkey = roomcount ^ 1204;
-							room.put(roomkey, roomname);
+							GameRoom gr = new GameRoom(roomkey,roomname,user);
+							roomManager.put(roomkey, gr);
 							
 							MessagePacker reply = new MessagePacker();
 							reply.SetProtocol(MessageProtocol.CREATE);
 							reply.add(roomkey);
+							reply.add(roomname);
 							reply.Finish();
 							send(reply);
 							
+							gr.broadcast(MessageProtocol.JOIN);
+							
 							MessagePacker broadcast = new MessagePacker();
 							broadcast.SetProtocol(MessageProtocol.LOGIN);
-							broadcast.add(room.size());
-							for(int item:room.keySet())
+							broadcast.add(roomManager.size());
+							for(int item:roomManager.keySet())
 							{
-								broadcast.add(room.get(item));
+								broadcast.add(roomManager.get(item).getName());
 							}
 							broadcast.Finish();
 							for(Client client: connections) {
@@ -194,7 +215,32 @@ public class Server {
 						}
 
 						case MessageProtocol.JOIN: {
-
+							int roomkey = msg.getInt();
+							GameRoom gr = roomManager.get(roomkey);
+							if(gr.getNumberOfPeople() < 2) {
+								gr.enterUser(user);
+								gr.broadcast(MessageProtocol.JOIN);
+							}
+							break;
+						}
+						
+						case MessageProtocol.READYLEAVE: {
+							int roomkey = msg.getInt();
+							GameRoom room = roomManager.get(roomkey);
+							room.exitUser(user);
+							room.broadcast(MessageProtocol.JOIN);
+							
+							MessagePacker broadcast = new MessagePacker();
+							broadcast.SetProtocol(MessageProtocol.LOGIN);
+							broadcast.add(roomManager.size());
+							for(int item:roomManager.keySet())
+							{
+								broadcast.add(roomManager.get(item).getName());
+							}
+							broadcast.Finish();
+							for(Client client: connections) {
+								client.send(broadcast);
+							}
 							break;
 						}
 
