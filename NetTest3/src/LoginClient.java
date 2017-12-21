@@ -17,21 +17,18 @@ public class LoginClient extends Frame{
 		TextField tport = new TextField(20);
 		tport.setBounds(80, 90, 100, 20);
 		
-		Label lnick = new Label("´Ð³×ÀÓ:");
-		lnick.setBounds(30, 120, 40, 20);
-		TextField tnick = new TextField(20);
-		tnick.setBounds(80, 120, 100, 20);
-		
 		Button blogin = new Button("Login");
 		blogin.setBounds(200,70,50,50);
 		blogin.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				String ip = tip.getText();
-				String port = tport.getText();
-				String nick = tnick.getText();
+				String p = tport.getText();
+				int port = Integer.parseInt(p);
 				try {
-					Client c = new Client(ip,port,nick);
+					ChatClient c = new ChatClient(ip,port);
+					c.Connect();
+					c.View();
 				}
 				catch(Exception e)
 				{}
@@ -52,8 +49,6 @@ public class LoginClient extends Frame{
 		add(lport);
 		add(tport);
 		add(blogin);
-		add(lnick);
-		add(tnick);
 		setResizable(false);
 		setSize(300,160);
 		Toolkit tk = Toolkit.getDefaultToolkit();

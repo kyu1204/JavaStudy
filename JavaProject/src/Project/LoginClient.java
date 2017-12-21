@@ -1,5 +1,8 @@
+package Project;
 import java.awt.*;
 import java.awt.event.*;
+
+import javax.swing.ImageIcon;
 
 
 public class LoginClient extends Frame{
@@ -17,11 +20,6 @@ public class LoginClient extends Frame{
 		TextField tport = new TextField(20);
 		tport.setBounds(80, 90, 100, 20);
 		
-		Label lnick = new Label("´Ð³×ÀÓ:");
-		lnick.setBounds(30, 120, 40, 20);
-		TextField tnick = new TextField(20);
-		tnick.setBounds(80, 120, 100, 20);
-		
 		Button blogin = new Button("Login");
 		blogin.setBounds(200,70,50,50);
 		blogin.addActionListener(new ActionListener() {
@@ -29,9 +27,8 @@ public class LoginClient extends Frame{
 			public void actionPerformed(ActionEvent arg0) {
 				String ip = tip.getText();
 				String port = tport.getText();
-				String nick = tnick.getText();
 				try {
-					Client c = new Client(ip,port,nick);
+					Client c = new Client(ip,port);
 				}
 				catch(Exception e)
 				{}
@@ -44,7 +41,7 @@ public class LoginClient extends Frame{
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent arg0) {
-				System.exit(0);
+				my.dispose();
 			}
 		});
 		add(lip);
@@ -52,13 +49,12 @@ public class LoginClient extends Frame{
 		add(lport);
 		add(tport);
 		add(blogin);
-		add(lnick);
-		add(tnick);
 		setResizable(false);
 		setSize(300,160);
 		Toolkit tk = Toolkit.getDefaultToolkit();
 		Dimension screenSize = tk.getScreenSize();
 		setLocation(screenSize.width/2-getWidth()/2, screenSize.height/2-getHeight()/2);
+		setIconImage(new ImageIcon("login.png").getImage());
 		setVisible(true);
 	}
 

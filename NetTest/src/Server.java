@@ -27,22 +27,19 @@ public class Server {
 	private AsynchronousServerSocketChannel serverSocketChannel;
 	List<Client> connections = new Vector<Client>();
 	private InetSocketAddress socketAddress;
+	private static ByteBuffer byteBuffer;
 	
 	/////UI////////////
-	public static HashMap<Integer, GameRoom> roomManager = new HashMap<Integer,GameRoom>();
 	private boolean flag = false;
 	private final Server my = this;
 	Button start = new Button("     시작     ");
 	Button stop = new Button("     정지     ");
 	Panel bPanel = new Panel();
 	TextArea log = new TextArea();
-	static int roomcount = 0;
 
 	public Server(String ip,String port) {
 		Frame f = new Frame("OmokServer");
-		roomcount++;
-		roomManager.put(roomcount^1204,new GameRoom(roomcount^1204,"No."+roomcount+" 다 덤벼 "));
-		
+		byteBuffer = ByteBuffer.allocate(1024);
 		socketAddress = new InetSocketAddress(ip,Integer.parseInt(port)); // 소켓 주소 설정
 		
 		bPanel.setLayout(new FlowLayout());
@@ -138,22 +135,15 @@ public class Server {
 	
 	class Client{
 		AsynchronousSocketChannel socketChannel;
-		GameUser user;
+		private String NickName;
 		
 		public Client(AsynchronousSocketChannel socketChannel) {
 			this.socketChannel = socketChannel;
-			try {
-				user = new GameUser(socketChannel.getRemoteAddress(),socketChannel);
-			} 
-			catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 			receive();
 		}
 		
 		public void receive() {
-			ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+			byteBuffer.clear();
 			socketChannel.read(byteBuffer,byteBuffer,new CompletionHandler<Integer, ByteBuffer>() {
 				@Override
 				public void completed(Integer result, ByteBuffer attachment) {
@@ -161,101 +151,37 @@ public class Server {
 						MessagePacker msg = new MessagePacker(attachment.array());
 						byte protocol = msg.getProtocol();
 						
-						
 						switch (protocol) {
 						case MessageProtocol.LOGIN: {
+							NickName = msg.getString();
 							MessagePacker reply = new MessagePacker();
-							reply.SetProtocol(MessageProtocol.LOGIN);
-							reply.add(roomManager.size());
-							for(int roomkey:roomManager.keySet())
-							{
-								reply.add(roomManager.get(roomkey).getName());
-							}
+							reply.SetProtocol(MessageProtocol.CHAT);
+							reply.add(NickName + "님이 입장하셨습니다.\n");
 							reply.Finish();
 							send(reply);
+							sendAll(reply);
+							break;
+						}
+						case MessageProtocol.CHAT:{
+							String data = "["+NickName+"]: "+msg.getString()+"\n";
+							MessagePacker reply = new MessagePacker();
+							reply.SetProtocol(MessageProtocol.CHAT);
+							reply.add(data);
+							reply.Finish();
+							send(reply);
+							sendAll(reply);
 							break;
 						}
 						case MessageProtocol.CLOSE: {
 							connections.remove(socketChannel);
 							log.append("[연결 종료: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]\n");
 							socketChannel.close();
-							break;
-						}
-
-						case MessageProtocol.CREATE: {
-							String roomname = msg.getString();
-							++roomcount;
-							roomname = "No."+roomcount+" "+roomname+" ";
-							int roomkey = roomcount ^ 1204;
-							GameRoom gr = new GameRoom(roomkey,roomname,user);
-							roomManager.put(roomkey, gr);
 							
 							MessagePacker reply = new MessagePacker();
-							reply.SetProtocol(MessageProtocol.CREATE);
-							reply.add(roomkey);
-							reply.add(roomname);
+							reply.SetProtocol(MessageProtocol.CHAT);
+							reply.add(NickName + "님이 나가셨습니다.\n");
 							reply.Finish();
-							send(reply);
-							
-							gr.broadcast(MessageProtocol.JOIN);
-							
-							MessagePacker broadcast = new MessagePacker();
-							broadcast.SetProtocol(MessageProtocol.LOGIN);
-							broadcast.add(roomManager.size());
-							for(int item:roomManager.keySet())
-							{
-								broadcast.add(roomManager.get(item).getName());
-							}
-							broadcast.Finish();
-							for(Client client: connections) {
-								client.send(broadcast);
-							}
-							
-							break;
-						}
-
-						case MessageProtocol.JOIN: {
-							int roomkey = msg.getInt();
-							GameRoom gr = roomManager.get(roomkey);
-							if(gr.getNumberOfPeople() < 2) {
-								gr.enterUser(user);
-								gr.broadcast(MessageProtocol.JOIN);
-							}
-							break;
-						}
-						
-						case MessageProtocol.READYLEAVE: {
-							int roomkey = msg.getInt();
-							GameRoom room = roomManager.get(roomkey);
-							room.exitUser(user);
-							room.broadcast(MessageProtocol.JOIN);
-							
-							MessagePacker broadcast = new MessagePacker();
-							broadcast.SetProtocol(MessageProtocol.LOGIN);
-							broadcast.add(roomManager.size());
-							for(int item:roomManager.keySet())
-							{
-								broadcast.add(roomManager.get(item).getName());
-							}
-							broadcast.Finish();
-							for(Client client: connections) {
-								client.send(broadcast);
-							}
-							break;
-						}
-
-						case MessageProtocol.BATTLE_START: {
-
-							break;
-						}
-
-						case MessageProtocol.BATTLE_END: {
-
-							break;
-						}
-
-						case MessageProtocol.BATTLE: {
-
+							sendAll(reply);
 							break;
 						}
 						}
@@ -273,21 +199,39 @@ public class Server {
 				}
 			});
 		}
-		
 		void send(MessagePacker data) {
-			socketChannel.write(data.getBuffer(),null,new CompletionHandler<Integer, Void>() {
-				@Override
-				public void completed(Integer result, Void attachment) {
-				}
-				@Override
-				public void failed(Throwable exc, Void attachment) {
-					try {
-						log.append( "[클라이언트 통신 안됨: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]\n");
-						connections.remove(Client.this);
-						socketChannel.close();
-					}catch (Exception e) {}
-				}
-			});
+				socketChannel.write(data.getBuffer(),null,new CompletionHandler<Integer, Void>() {
+					@Override
+					public void completed(Integer result, Void attachment) {
+					}
+					@Override
+					public void failed(Throwable exc, Void attachment) {
+						try {
+							log.append( "[클라이언트 통신 안됨: " + socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]\n");
+							connections.remove(Client.this);
+							socketChannel.close();
+						}catch (Exception e) {}
+					}
+				});
+			}
+		
+		void sendAll(MessagePacker data) {
+			for(Client c:connections) {
+				c.socketChannel.write(data.getBuffer(),null,new CompletionHandler<Integer, Void>() {
+					@Override
+					public void completed(Integer result, Void attachment) {
+					}
+					@Override
+					public void failed(Throwable exc, Void attachment) {
+						try {
+							log.append( "[클라이언트 통신 안됨: " + c.socketChannel.getRemoteAddress() + ": " + Thread.currentThread().getName() + "]\n");
+							connections.remove(Client.this);
+							c.socketChannel.close();
+						}catch (Exception e) {}
+					}
+				});
+			}
+			
 		}
 	}
 	

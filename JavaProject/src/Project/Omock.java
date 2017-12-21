@@ -17,12 +17,6 @@ public class Omock extends Frame {
 
 	class MouseEventHandle extends MouseAdapter {
 		@Override
-		public void mouseMoved(MouseEvent e) {
-			int x = e.getX();
-			int y = e.getY();
-			my.setTitle(x+","+y);
-		}
-		@Override
 		public void mousePressed(MouseEvent e) {
 			int x = (e.getX() - 15) / 30;
 			int y = (e.getY() - 45) / 30;
@@ -74,7 +68,6 @@ public class Omock extends Frame {
 			}
 		});
 		addMouseListener(new MouseEventHandle());
-		addMouseMotionListener(new MouseEventHandle());
 
 		setVisible(true);
 	}

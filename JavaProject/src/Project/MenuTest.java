@@ -102,10 +102,28 @@ public class MenuTest extends Frame {
 		miOmock.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				new OmockLogin();
+				new Omock();
 			}
 		});
-		MenuItem miMyMenu3 = new MenuItem("나의 메뉴3");
+		Menu mChat = new Menu("채팅 프로그램");
+		MenuItem michatServer = new MenuItem("채팅 서버");
+		MenuItem michatClient = new MenuItem("채팅 프로그램");
+		
+		michatServer.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new LoginServer();
+			}
+		});
+		michatClient.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new LoginClient();
+			}
+		});
+		
+		mChat.add(michatServer);
+		mChat.add(michatClient);
 		
 		
 		Menu mHelp = new Menu("Help"); //메뉴
@@ -134,7 +152,7 @@ public class MenuTest extends Frame {
 		//mMyMenu메뉴에 메뉴아이템 추가
 		mMyMenu.add(miLifeGame);
 		mMyMenu.add(miOmock);
-		mMyMenu.add(miMyMenu3);
+		mMyMenu.add(mChat);
 		
 		mHelp.add(miHelp);
 		

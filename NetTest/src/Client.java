@@ -13,114 +13,43 @@ import java.util.*;
 import MsgPacker.MessagePacker;
 import MsgPacker.MessageProtocol;
 
-public class OmokClient {
-	private final OmokClient my = this;
-	private int roomkey;
-	private String roomName;
-	public boolean readyflag = false;
+public class Client {
+	private final Client my = this;
+	private String NickName;
 	
 	Frame main;
-	List roomview = new List();
+	TextArea textView = new TextArea(null,30,30,TextArea.SCROLLBARS_NONE);
+	TextArea chatBox = new TextArea(null,30,30,TextArea.SCROLLBARS_NONE);
 	Panel bPanel = new Panel();
-	Button createroom = new Button("방 만들기");
-	Button joinroom = new Button("들어가기");
-	Button refresh = new Button("새로고침");
-	ArrayList<String> room = new ArrayList<String>();
+	Button bsend = new Button("전송");
 	
 	AsynchronousChannelGroup channelGroup;
 	AsynchronousSocketChannel socketChannel;
-	public OmokClient(String ip,String port) {
-		main = new Frame("Omok");
+	public Client(String ip,String port,String nick) {
+		this.NickName = nick;
+		main = new Frame("채팅 프로그램");
+		textView.setEditable(false);
+		textView.setBackground(Color.WHITE);
 		startClient(ip, String.valueOf(port));
-		roomview.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
-		bPanel.setLayout(new FlowLayout(FlowLayout.CENTER,50,30));
-		bPanel.add(createroom);
-		bPanel.add(joinroom);
-		bPanel.add(refresh);
+		bPanel.setLayout(null);
+		bPanel.setSize(500, 100);
+		chatBox.setBounds(5, 5, 370, 90);
+		bPanel.add(chatBox);
+		bsend.setBounds(385, 5, 90, 90);
+		bPanel.add(bsend);
+
 		
-		joinroom.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				String roomName = roomview.getSelectedItem();
-				String stringkey = roomName.substring(3, 4);
-				int key = Integer.parseInt(stringkey) ^ 1204;
-				MessagePacker msg = new MessagePacker();
-				msg.SetProtocol(MessageProtocol.JOIN);
-				msg.add(key);
-				msg.Finish();
-				send(msg);
-			}
-		});
-		
-		refresh.addActionListener(new ActionListener() {
+		bsend.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				MessagePacker msg = new MessagePacker();
-				msg.SetProtocol(MessageProtocol.LOGIN);
+				msg.SetProtocol(MessageProtocol.CHAT);
+				msg.add(chatBox.getText());
 				msg.Finish();
 				send(msg);
+				chatBox.setText("");
 			}
 		});
-		
-		createroom.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Dialog createRoom = new Dialog(main, "방 만들기", true);
-				createRoom.setLayout(null);
-				
-				Label lname = new Label("방 이름:");
-				lname.setBounds(20, 90, 50, 20);
-				createRoom.add(lname);
-				
-				TextField tfname = new TextField();
-				tfname.setBounds(70, 90, 150, 20);
-				createRoom.add(tfname);
-				
-				Button bok = new Button("만들기");
-				bok.setBounds(60, 150, 50, 30);
-				bok.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						if(tfname.getText().length()>0) {
-							MessagePacker msg = new MessagePacker();
-							msg.SetProtocol(MessageProtocol.CREATE);
-							msg.add(tfname.getText());
-							msg.Finish();
-							send(msg);
-							createRoom.dispose();
-						}
-						else {
-							tfname.setFocusable(true);
-						}
-					}
-				});
-				createRoom.add(bok);
-				
-				Button bcancel = new Button("취소");
-				bcancel.setBounds(150, 150, 50, 30);
-				bcancel.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						createRoom.dispose();
-					}
-				});
-				createRoom.add(bcancel);
-				
-				createRoom.addWindowListener(new WindowAdapter() {
-					@Override
-					public void windowClosing(WindowEvent e) {
-						createRoom.dispose();
-					}
-				});
-				createRoom.setSize(250, 200);
-				Toolkit tk = Toolkit.getDefaultToolkit();
-				Dimension screenSize = tk.getScreenSize();
-				createRoom.setBackground(Color.white);
-				createRoom.setLocation(screenSize.width/2-createRoom.getWidth()/2, screenSize.height/2-createRoom.getHeight()/2);
-				createRoom.setVisible(true);
-			}
-		});
-		
 		
 		main.addWindowListener(new WindowAdapter() {
 			@Override
@@ -135,7 +64,7 @@ public class OmokClient {
 				System.exit(0);
 			}
 		});
-		main.add(roomview, "Center");
+		main.add(textView, "Center");
 		main.add(bPanel, "South");
 		main.setSize(500,500);
 		Toolkit tk = Toolkit.getDefaultToolkit();
@@ -154,8 +83,8 @@ public class OmokClient {
 				@Override
 				public void completed(Void result, Void attachment) {
 					MessagePacker msg = new MessagePacker(); // MessagePacker 사용해보자
-
 					msg.SetProtocol(MessageProtocol.LOGIN);
+					msg.add(NickName);
 					msg.Finish();
 					send(msg);
 
@@ -196,71 +125,11 @@ public class OmokClient {
 					byte protocol = msg.getProtocol();
 					
 					switch (protocol) {
-					case MessageProtocol.LOGIN: {
-						int size = msg.getInt();
-						room.clear();
-						for (int i = 0; i < size; ++i) {
-							room.add(msg.getString());
-						}
-						roomview.removeAll();
-						for(int i = 0; i< room.size();++i)
-							roomview.add((String)room.get(i));
+					case MessageProtocol.CHAT: {
+						textView.append(msg.getString());
 						break;
 					}
 
-					case MessageProtocol.CREATE: {
-						roomkey = msg.getInt();
-						roomName = msg.getString();
-						//main.setVisible(false);
-						break;
-					}
-
-					case MessageProtocol.JOIN: {
-						int roomid = msg.getInt();
-						String roomName = msg.getString();
-						ArrayList<String> member = new ArrayList<String>();
-						int size = msg.getInt();
-						for(int i = 0; i<size;++i) {
-							member.add(msg.getString());
-						}
-						main.setVisible(false);
-						ReadyRoom r = new ReadyRoom(roomid,roomName,main,my);
-						for(int i = 0; i<member.size();++i) {
-							r.member.add(member.get(i));
-						}
-						readyflag = true;
-						/*
-						if(ready != null) {
-							ready.member.removeAll();
-							for(int i = 0; i<member.size();++i) {
-								ready.member.add(member.get(i));
-							}
-						}
-						else if(ready == null) {
-							main.setVisible(false);
-							ready = new ReadyRoom(roomid,roomName,main,my);
-							ready.member.removeAll();
-							for(int i = 0; i<member.size();++i) {
-								ready.member.add(member.get(i));
-							}
-						}*/
-						break;
-					}
-
-					case MessageProtocol.BATTLE_START: {
-
-						break;
-					}
-
-					case MessageProtocol.BATTLE_END: {
-
-						break;
-					}
-
-					case MessageProtocol.BATTLE: {
-
-						break;
-					}
 					}
 					
 					
